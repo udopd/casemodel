@@ -4,6 +4,8 @@ Status: architecture baseline for review; no application implementation.
 Date: 2026-11-27.
 Product: a local-first web CASE workbench evolving from BPwin-style process modeling to ERwin-style data modeling.
 
+The [Phase 1 contract agreement](CONTRACTS.md) specifies the portable v1 types, editing and I/O boundaries, and feature ownership for this baseline.
+
 ## 1. Product decisions and boundaries
 
 ### Confirmed requirements
@@ -19,13 +21,13 @@ Product: a local-first web CASE workbench evolving from BPwin-style process mode
 - Interface labels, tooltips, dialogs, validation messages, and reports are Russian. Source identifiers, comments, engineering documentation, commits, and agent instructions are English. User-authored model content is preserved in its original language.
 - Implementation follows architecture review. This document does not create framework scaffolding, executable configuration, agent skills, or deployment resources.
 
-### Proposed clarifications to the original handover
+### Clarifications to the original handover
 
-| Topic | Proposal | Reason / decision status |
+| Topic | Approach | Reason / decision status |
 | --- | --- | --- |
 | Build runtime | Use Node.js 24 LTS for the initial toolchain; pin a supported patch at bootstrap | Node.js 20 is EOL. Production remains Nginx-only. Proposed update to the handover. |
-| Routing | Keep elkjs for automatic graph layout; add a deterministic fixed-position orthogonal routing strategy | ELK Layered is not a general fixed-node edge router. Exact staircase placement and manual positions need a separate strategy. Proposed refinement. |
-| SVG export | Generate portable SVG primitives from a shared drawing scene; retain html-to-image for PNG | html-to-image wraps HTML in SVG foreignObject. This is different from a portable vector drawing. Proposed refinement. |
+| Routing | Use separate placement and fixed-bound orthogonal routing contracts | Agreed for Phase 1. ELK can place movable nodes. The fixed-position router still needs the §8 prototype. |
+| SVG export | Generate portable SVG primitives from the shared drawing scene and retain html-to-image for PNG | Agreed for Phase 1. The scene supplies full-diagram geometry to both renderers. |
 | Local persistence | Retain LocalStorage for Phase 1, behind a repository interface | Fits the selected small-model scope if quota failures and recovery are implemented. IndexedDB is a later adapter, not a hidden scope change. |
 | Offline availability | Local editing needs no network after assets load; cold-start offline availability is a separate service-worker milestone | Local-first storage does not itself cache application assets. |
 | Legacy file compatibility | Treat original BPwin/ERwin file import/export as a separate compatibility workstream | The specified .bpw.json is a new format, not a claim of binary compatibility. |
@@ -103,15 +105,15 @@ Phase 1 presents one process model per project. The envelope uses a collection s
 | Concept | Meaning and ownership |
 | --- | --- |
 | `ProcessModel` | Title, purpose, viewpoint, author, root diagram, model-level settings and dictionary |
-| `Diagram` | Notation, ordered node references, relation references, interface bindings, frame metadata |
+| `Diagram` | Owns ordered node occurrences, relations, boundary occurrences and local arrow networks |
 | `Node` | Discriminated notation-specific semantic entity; independent of coordinates |
 | `Relation` | Typed IDEF0 arrow segment, DFD data flow, or IDEF3 link with explicit endpoints |
 | `Endpoint` | Existing node attachment, diagram boundary attachment, or IDEF0 branch/join attachment |
 | `ArrowConcept` | Dictionary identity, name and definition; can be referenced by multiple occurrences |
 | `ArrowNetwork` | IDEF0 branch/join topology and segment-level concept references |
-| `BoundaryBinding` | Stable correspondence between a parent activity incidence and a child interface occurrence |
+| `BoundaryBinding` | Decomposition-owned correspondence between a parent incidence and its child targets, including unresolved mappings |
 | `Decomposition` | Parent activity/process/UOW reference, child diagram reference, notation and mapping policy |
-| `Presentation` | Node bounds, port order/offsets, label positions, manual waypoints, page/frame configuration |
+| `Presentation` | Node bounds, visual attachment offsets, label positions, manual waypoints, styles and page/frame configuration. Semantic incidence order belongs to the endpoints. |
 | `Diagnostic` | Stable rule ID, severity, subject references, revision, message key and parameters |
 
 Use opaque stable IDs for references. Human-readable node numbers and ICOM codes are derived from hierarchy and explicit ordering; they are never database keys. Renumbering A2 to A3 must not sever a child diagram, tunnel, dictionary reference, or future table mapping.
@@ -190,7 +192,7 @@ Referents use typed targets and report unresolved references. IDEF3 here means t
 | DFD process inside the IDEF0 hierarchy | DFD | Balanced data interfaces |
 | IDEF3 UOW inside the IDEF0 hierarchy | IDEF3 | Scenario/decomposition references; no fabricated ICOM ports |
 
-The root restriction is confirmed. The recursive options above are the proposed initial policy. A parent has one active decomposition in Phase 1; the schema isolates decomposition relationships so alternate views can be added later. Changing an existing child's notation is not a cast: it needs a migration preview or a separate replacement operation.
+The root restriction and the recursive options above apply in Phase 1. A parent node has at most one active decomposition. Changing the child's notation requires an explicit replacement operation.
 
 ## 7. Diagnostics and model status bar
 
@@ -269,10 +271,10 @@ All exports operate on one frozen revision, independent of later editing. Render
 | --- | --- | --- |
 | `.bpw.json` | Versioned canonical document serializer | Round trip preserves IDs, topology, hierarchy, bindings, tunnels and manual layout; semantic errors survive |
 | PNG | Isolated export renderer plus html-to-image, pixel ratio 2 | Entire diagram, no grid/handles/toolbars/selection, readable Cyrillic and unclipped labels |
-| SVG | Proposed pure scene-to-SVG generator | Shapes, paths, text and markers; no foreignObject dependency, external URLs or editor chrome |
+| SVG | Pure scene-to-SVG generator | Shapes, paths, text and markers; no foreignObject dependency, external URLs or editor chrome |
 | PDF | Pure report plan plus jsPDF adapter | Landscape A4, Cyrillic fonts, stable ordering, pagination and usable margins |
 
-The proposed drawing scene consists of rectangles, paths, text runs, markers and frame fields with measured coordinates. SVG serialization escapes user text. The same measurements and symbols are reused across display and exports to limit visual drift.
+The drawing scene consists of rectangles, paths, text runs, markers and frame fields with measured coordinates. SVG serialization escapes user text. The same measurements and symbols are reused across display and exports to limit visual drift.
 
 PDF order: paginated hierarchical node tree, A-0, depth-first traversal of descendants in explicit node order, arrow dictionary, and diagnostics appendix when required. The dictionary deduplicates by semantic identity and lists occurrences, inherited ICOM references and tunnel notes. Same-named but distinct concepts are not silently merged.
 
@@ -361,8 +363,8 @@ These do not block an architecture document. They must be settled at the indicat
 
 | Item | Baseline / next decision | Gate |
 | --- | --- | --- |
-| Fixed-position routing | Proposed independent pure router plus ELK placement | Before routing-dependent canvas acceptance |
-| Portable SVG | Proposed scene-based generator, PNG still html-to-image | Before export implementation |
+| Fixed-position routing | Qualify the independent router on fixed boxes, parallel attachments and feedback paths | Before routing-dependent canvas acceptance |
+| Portable SVG | Verify full scene bounds, Cyrillic text and portable primitives on the shared export fixture | Before export acceptance |
 | BPwin/ERwin parity | Inventory concrete workflows and legacy versions; distinguish implemented, planned and excluded capabilities | Before claiming full replacement |
 | Legacy file import | No binary compatibility implied by `.bpw.json`; select formats and obtain representative fixtures | Separate compatibility milestone |
 | Notation authority | Trace every rule to the selected source or explicitly identify it as a BPwin/product profile rule | Before validator acceptance |
