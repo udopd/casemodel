@@ -227,7 +227,7 @@ Separate node placement, port allocation, path routing, and drawing. All use dia
 
 ELK is an external strategy behind a core port. Pin its version and layout options, supply stable ordering and seed, and normalize coordinates. Do not assume `elk.fixed` will invent routes, or that the separate native libavoid integration is included in elkjs.
 
-For exact IDEF0 placement and manual moves, the proposed pure router uses an orthogonal visibility/grid graph with obstacle inflation, bend penalties, stable tie-breaking, and exterior feedback lanes. This is the primary technical risk and must pass a focused prototype gate before canvas feature work. ELK-only behavior must not be advertised as equivalent without evidence.
+For exact IDEF0 placement and manual moves, the proposed pure router uses an orthogonal visibility/grid graph with obstacle inflation, bend penalties, stable tie-breaking, and exterior feedback lanes. This is the primary technical risk and must pass a focused prototype gate before routing-dependent canvas behavior is accepted. Independent canvas work can proceed in parallel against the agreed layout port. ELK-only behavior must not be advertised as equivalent without evidence.
 
 No node overlap is an acceptance condition for completed automatic layouts. During manual dragging a preview may overlap; at drop the proposed policy finds a nearby non-overlapping placement or restores the prior position with feedback. Imported/manual conflicts remain diagnosable. Zero edge crossings is not promised for arbitrary graphs; intersections without an explicit join do not change semantics.
 
@@ -322,6 +322,8 @@ The root instructions explicitly index the nested skill locations; a symlink to 
 
 The architecture stage is documentation only. The repository currently has no package manifest or executable tests, so implementation checks cannot run yet.
 
+The stages below are delivery milestones, not a requirement to finish the core or an IDEF0 vertical slice before parallel development. Follow root `TASKLIST.md` for the minimal start gate: a buildable scaffold, shared types/ports and fixture, passing baseline checks, and disjoint ownership. Implement commands, persistence, notations, routing, UI, exports and delivery in parallel where their agreed interfaces permit it; verify dependent integrations as implementations become available. Full feature and release acceptance criteria remain unchanged.
+
 ### Future mandatory commands
 
 `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run test:e2e`, and `npm run build`.
@@ -359,7 +361,7 @@ These do not block an architecture document. They must be settled at the indicat
 
 | Item | Baseline / next decision | Gate |
 | --- | --- | --- |
-| Fixed-position routing | Proposed independent pure router plus ELK placement | Before canvas implementation |
+| Fixed-position routing | Proposed independent pure router plus ELK placement | Before routing-dependent canvas acceptance |
 | Portable SVG | Proposed scene-based generator, PNG still html-to-image | Before export implementation |
 | BPwin/ERwin parity | Inventory concrete workflows and legacy versions; distinguish implemented, planned and excluded capabilities | Before claiming full replacement |
 | Legacy file import | No binary compatibility implied by `.bpw.json`; select formats and obtain representative fixtures | Separate compatibility milestone |

@@ -2,7 +2,9 @@
 
 ## Baseline and Scope
 
-Treat `docs/ARCHITECTURE.md` as the canonical architecture baseline. Read the relevant sections before changing a contract; preserve the distinction between confirmed decisions and proposals. Current work is the instruction hierarchy, not Next.js scaffolding.
+Treat `docs/ARCHITECTURE.md` as the canonical architecture baseline. Read the relevant sections before changing a contract; preserve the distinction between confirmed decisions and proposals. Read root `TASKLIST.md` for the current stage and next incomplete task; it does not authorize implementation beyond the user's request.
+
+Maintain `TASKLIST.md` after completed stages and before ending a work session: update verified checkboxes, evidence, blockers and the resume/handoff fields. Never mark an untested or partial task complete. On resume, check actual files and Git status before trusting the recorded state.
 
 - Build a local-first BPwin process modeler before the separate ERwin expansion. No in-app AI or model-data backend.
 - Start process models with IDEF0. Create DFD/IDEF3 through decomposition, not independent roots. Target educational models of up to 20 diagrams initially.
